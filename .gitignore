@@ -1,0 +1,18 @@
+# Ambiente Virtuale
+venv/
+ENV/
+pyvenv.cfg
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database e Log
+*.sqlite
+*.log
+
+# Cartelle IDE
+.vscode/
+.idea/
