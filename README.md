@@ -1,39 +1,34 @@
-# 🤖 HelloChain Agent v0.1
+# HelloChain Agent v0.1
 
-### 🚀 Overview
-**HelloChain** è un assistente AI autonomo basato su **LangGraph** e **Ollama**. Progettato per girare interamente in locale, è ottimizzato per architetture **i7 (16 Core / 32 Thread)**.
+Assistente AI autonomo basato su **LangGraph** e **Ollama**, ottimizzato per architetture **i7 (16 Core / 32 Thread)**.
 
----
+## 🚀 Caratteristiche Principali
+* **🧠 Brain**: Qwen 2.5 (7B) via Ollama.
+* **🌐 Web**: Ricerca integrata tramite DuckDuckGo.
+* **🛡️ Sandbox**: File System e Python REPL isolati.
+* **⚙️ Performance**: Ottimizzato per 32 thread su Linux.
 
-### 🛠️ Core Features
-| Feature | Description |
-| :--- | :--- |
-| **🧠 Brain** | Qwen 2.5 (7B) via Ollama |
-| **🌐 Web** | Ricerca DuckDuckGo (No API Key) |
-| **🛡️ Sandbox** | File System e REPL blindati |
-| **💾 Memory** | Persistence via LangGraph Checkpointers |
+## 📂 Struttura del Progetto
 
----
+```text
+hellochain/
+├── my_agent/
+│   ├── tools/          # Strumenti dell'agente
+│   │   ├── file_ops.py    # Lettura/Scrittura sicura
+│   │   ├── interpreter.py # Sandbox Python (REPL)
+│   │   ├── web.py         # Ricerca DuckDuckGo
+│   │   └── git_ops.py     # Gestione repository
+│   ├── nodes.py        # Logica decisionale
+│   ├── app.py          # Grafo LangGraph
+│   └── state.py        # Stato dell'agente
+├── main.py             # Entry point
+└── .gitignore          # Filtri repository
+```
 
-### 📂 Progetto
-* **`my_agent/tools/`**: Suite di strumenti (File, REPL, Web).
-* **`my_agent/nodes.py`**: Logica decisionale e binding LLM.
-* **`my_agent/app.py`**: Definizione del workflow (Grafo).
-* **`main.py`**: Interfaccia utente.
-
-
-
----
-
-### ⚙️ Setup Rapido
-1. **Ambiente**: `python3 -m venv venv`
-2. **Attivazione**: `source venv/bin/activate`
-3. **Dipendenze**: `pip install -r requirements.txt`
-
----
-
-### 🔒 Sicurezza & Privacy
-L'agente opera in una **Sandbox**. Non può uscire dalla cartella di progetto e il REPL non ha accesso ai comandi di sistema (`os`, `subprocess`). **Zero dati inviati al cloud.**
+## 📦 Installazione e Setup
+1. **Ambiente**: python3 -m venv venv
+2. **Attivazione**: source venv/bin/activate
+3. **Dipendenze**: pip install -r requirements.txt
 
 ---
-*Sviluppato su Linux - Architettura 32-Thread.*
+*Sviluppato su Linux - Architettura i7 32-Thread.*
