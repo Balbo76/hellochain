@@ -1,38 +1,29 @@
 import os
 from pathlib import Path
 
-# Definiamo la cartella del progetto come UNICA zona accessibile
-# .parent.parent.parent ci porta fuori da my_agent/tools/ alla root del progetto
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
+WORKSPACE_DIR = PROJECT_ROOT / "workspace"
+WORKSPACE_DIR.mkdir(exist_ok=True)
 
+def get_safe_path(filename: str) -> Path:
+    """Valida il percorso per evitare path traversal (es. ../../)"""
+    safe_filename = Path(filename).name
+    return WORKSPACE_DIR / safe_filename
 
 def create_new_file(filename: str, content: str) -> str:
-    """
-    MOLTO IMPORTANTE: Usa questo tool ogni volta che l'utente chiede di creare,
-    scrivere o generare un file (.py, .md, .txt).
-    Non limitarti a scrivere il testo nella chat, DEVI chiamare questa funzione
-    per salvare fisicamente il file sul disco.
-    """
+    """Crea un file solo ed esclusivamente dentro la cartella /workspace."""
+    safe_path = get_safe_path(filename)
     try:
-        # Forza la scrittura nella cartella corrente del progetto
-        path = os.path.join(os.getcwd(), filename)
-        with open(path, "w", encoding="utf-8") as f:
+        with open(safe_path, "w", encoding="utf-8") as f:
             f.write(content)
-        return f"File '{filename}' creato con successo in {path}."
+        return f"File '{safe_path.name}' creato correttamente in /{safe_path.relative_to(PROJECT_ROOT)}."
     except Exception as e:
-        return f"Errore durante la creazione del file: {str(e)}"
+        return f"Errore critico durante la scrittura: {str(e)}"
 
-
-def list_files(directory: str = ".") -> str:
-    """Elenca i file solo dentro la cartella del progetto."""
-    # Impediamo di risalire l'albero con ".."
-    safe_path = PROJECT_ROOT
-
-    files = os.listdir(safe_path)
-    # Filtriamo per non mostrare le cartelle nascoste o il venv se non vuoi
-    visible_files = [f for f in files if not f.startswith('.') and f != 'venv']
-
-    return f"File nel progetto '{PROJECT_ROOT.name}': " + ", ".join(visible_files)
+def list_files() -> str:
+    """Elenca solo i file contenuti esclusivamente dentro la cartella /workspace."""
+    files = os.listdir(WORKSPACE_DIR)
+    return f"File presenti nella workspace: {', '.join(files) if files else 'Nessuno'}"
 
 
 def read_file(filename: str) -> str:
@@ -45,3 +36,4 @@ def read_file(filename: str) -> str:
     with open(safe_path, "r", encoding="utf-8") as f:
         content = f.read()
     return f"Contenuto di '{safe_path.name}':\n\n{content}"
+

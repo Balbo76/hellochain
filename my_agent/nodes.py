@@ -12,9 +12,20 @@ call_tools = ToolNode(all_tools)
 log = setup_logger("AGENT")
 
 
+SYSTEM_PROMPT = """Sei un Architetto Software Senior. 
+Hai accesso a file system protetto nella cartella /workspace.
+NON rispondere che non puoi eseguire operazioni: i tool che hai a disposizione sono fatti apposta per essere usati.
+Quando l'utente ti chiede di creare file o strutture, usa i tool forniti (create_new_file, etc.) invece di descriverli a parole."""
+
+
 def call_model(state):
-    log.info(f"Avvio inferenza LLM. Contesto: {len(state['messages'])} messaggi{get_resource_log()}")
-    response = model.invoke(state["messages"])
+    # Assicurati che il SystemMessage sia sempre il primo messaggio
+    messages = state["messages"]
+    if not isinstance(messages[0], SystemMessage):
+        messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+
+    log.info(f"Avvio inferenza LLM. Contesto: {len(messages)} messaggi{get_resource_log()}")
+    response = model.invoke(messages)
     log.debug("Risposta generata correttamente.")
     return {"messages": [response]}
 

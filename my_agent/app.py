@@ -4,50 +4,63 @@ from pathlib import Path
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph, END
 from my_agent.state import AgentState
-from my_agent.nodes import call_model, call_tools, should_continue, should_summarize, summarize_history
+from my_agent.nodes import call_model, call_tools, summarize_history
 
-print("\033[94m[DEBUG] app.py: Grafo in fase di compilazione con SqliteSaver\033[0m")
-
+# Setup directory
 base_dir = Path(__file__).parent.parent
 data_dir = base_dir / "data"
-os.makedirs(data_dir, exist_ok=True) # Crea la cartella se non esiste
+os.makedirs(data_dir, exist_ok=True)
 db_path = data_dir / "checkpoints.db"
+
+# Setup Persistenza
 conn = sqlite3.connect(db_path, check_same_thread=False)
 memory = SqliteSaver(conn)
+
+
+def router(state):
+    """Router unico: decide il prossimo passo basandosi sullo stato."""
+    messages = state["messages"]
+    last_message = messages[-1]
+
+    # 1. Priorità: Memoria (se > 15 messaggi)
+    if len(messages) > 15:
+        return "summarize"
+
+    # 2. Priorità: Azioni (se ci sono chiamate a tool)
+    if last_message.tool_calls:
+        return "action"
+
+    # 3. Stop
+    return END
+
 
 def create_app():
     workflow = StateGraph(AgentState)
 
-    # 1. Aggiunta dei nodi
+    # Nodi
     workflow.add_node("agent", call_model)
     workflow.add_node("action", call_tools)
     workflow.add_node("summarize", summarize_history)
 
-    # 2. Logica di Ingresso Condizionale (Summarize o Agent)
-    # Rimuoviamo set_entry_point("agent") perché deve decidere should_summarize
-    workflow.set_conditional_entry_point(
-        should_summarize,
-        {
-            "summarize": "summarize",
-            "agent": "agent",
-        }
-    )
+    # Entry point
+    workflow.set_entry_point("agent")
 
-    # 3. Flusso del Sommario
-    workflow.add_edge("summarize", "agent")
-
-    # 4. Ciclo di esecuzione standard (Agent -> Action -> Agent)
+    # Routing unico dopo ogni interazione con l'agente
     workflow.add_conditional_edges(
         "agent",
-        should_continue,
+        router,
         {
-            "continue": "action",
-            "end": END
+            "summarize": "summarize",
+            "action": "action",
+            "__end__": END
         }
     )
-    workflow.add_edge("action", "agent")
 
-    # Compilazione con checkpointer e debug attivo
+    # Ritorno al nodo agente dopo ogni operazione
+    workflow.add_edge("action", "agent")
+    workflow.add_edge("summarize", "agent")
+
     return workflow.compile(checkpointer=memory, debug=False)
+
 
 app = create_app()
