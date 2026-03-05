@@ -1,14 +1,18 @@
 import sqlite3
+import os
+from pathlib import Path
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph, END
 from my_agent.state import AgentState
-# Assicurati di importare le nuove funzioni dal file nodes.py
 from my_agent.nodes import call_model, call_tools, should_continue, should_summarize, summarize_history
 
 print("\033[94m[DEBUG] app.py: Grafo in fase di compilazione con SqliteSaver\033[0m")
 
-# Connessione al database per la persistenza
-conn = sqlite3.connect("checkpoints.db", check_same_thread=False)
+base_dir = Path(__file__).parent.parent
+data_dir = base_dir / "data"
+os.makedirs(data_dir, exist_ok=True) # Crea la cartella se non esiste
+db_path = data_dir / "checkpoints.db"
+conn = sqlite3.connect(db_path, check_same_thread=False)
 memory = SqliteSaver(conn)
 
 def create_app():

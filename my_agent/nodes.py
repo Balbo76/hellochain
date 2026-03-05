@@ -2,17 +2,20 @@ from langgraph.prebuilt import ToolNode
 from my_agent.tools import all_tools
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
+from my_agent.utils.logger import setup_logger, get_resource_log
 
 print("\033[94m[DEBUG] nodes.py: Caricamento tool e Qwen 2.5\033[0m")
 
 model = ChatOllama(model="qwen2.5:7b", temperature=0).bind_tools(all_tools)
 summarizer_llm = ChatOllama(model="qwen2.5:7b", temperature=0)
 call_tools = ToolNode(all_tools)
+log = setup_logger("AGENT")
+
 
 def call_model(state):
-    print(f"\n[BRAIN] L'agente sta pensando... (Messaggi nel contesto: {len(state['messages'])})")
-    # Usa il modello globale definito sopra
+    log.info(f"Avvio inferenza LLM. Contesto: {len(state['messages'])} messaggi{get_resource_log()}")
     response = model.invoke(state["messages"])
+    log.debug("Risposta generata correttamente.")
     return {"messages": [response]}
 
 
@@ -21,21 +24,21 @@ def should_continue(state):
     last_message = messages[-1]
     if not last_message.tool_calls:
         return "end"
-    print(f"\n[ACTION] L'agente ha deciso di usare un tool: {last_message.tool_calls[0]['name']}!")
+    log.info(f"\n[ACTION] L'agente ha deciso di usare un tool: {last_message.tool_calls[0]['name']}!")
     return "continue"
 
 
 def should_summarize(state):
-    # Logica di controllo per il grafo
-    if len(state["messages"]) > 10:
-        print(f"\n[MEMORY] Soglia superata ({len(state['messages'])} messaggi). Innesco riassunto...")
+    if len(state["messages"]) > 15:
+        log.info(f"\n[MEMORY] Soglia superata ({len(state['messages'])} messaggi). Innesco riassunto...")
         return "summarize"
     return "agent"
 
 
 def summarize_history(state):
     messages = state["messages"]
-    print(f"✂️ [SUMMARIZE] Tentativo di compressione su {len(messages)} messaggi...")
+
+    log.info(f"✂️ [SUMMARIZE] Tentativo di compressione su {len(messages)} messaggi...")
 
     existing_summary = state.get("summary", "")
     if existing_summary:
@@ -47,16 +50,11 @@ def summarize_history(state):
     else:
         summary_prompt = "Riassumi la conversazione in modo conciso..."
 
-    # Generiamo il riassunto (escludendo gli ultimi 2 messaggi per sicurezza)
     summary_response = summarizer_llm.invoke(messages[:-2] + [HumanMessage(content=summary_prompt)])
     new_summary = SystemMessage(content=f"Riassunto precedente: {summary_response.content}")
 
-    # CREIAMO LE ISTRUZIONI DI CANCELLAZIONE
-    # Diciamo a LangGraph di eliminare tutti i messaggi vecchi tranne gli ultimi 2
     delete_messages = [RemoveMessage(id=m.id) for m in messages[:-2] if m.id is not None]
 
-    # Restituiamo il riassunto + i messaggi di cancellazione + gli ultimi 2
-    # LangGraph vedrà i RemoveMessage e pulirà il DB
     return {
         "messages": delete_messages + [new_summary] + messages[-2:]
     }
