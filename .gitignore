@@ -16,4 +16,4 @@ __pycache__/
 # Cartelle IDE
 .vscode/
 .idea/
-checkpoints.db
+checkpoints.db*
