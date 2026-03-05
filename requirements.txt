@@ -1,0 +1,6 @@
+langchain-ollama
+langgraph
+langgraph-checkpoint-sqlite
+langgraph-prebuilt
+duckduckgo-search
+langchain-experimental
