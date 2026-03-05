@@ -7,13 +7,20 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 
 
 def create_new_file(filename: str, content: str) -> str:
-    """Crea un file solo dentro la cartella del progetto."""
-    # .name assicura che non possa usare "../../etc/passwd"
-    safe_path = PROJECT_ROOT / Path(filename).name
-
-    with open(safe_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    return f"File '{safe_path.name}' creato in {PROJECT_ROOT.name}."
+    """
+    MOLTO IMPORTANTE: Usa questo tool ogni volta che l'utente chiede di creare,
+    scrivere o generare un file (.py, .md, .txt).
+    Non limitarti a scrivere il testo nella chat, DEVI chiamare questa funzione
+    per salvare fisicamente il file sul disco.
+    """
+    try:
+        # Forza la scrittura nella cartella corrente del progetto
+        path = os.path.join(os.getcwd(), filename)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return f"File '{filename}' creato con successo in {path}."
+    except Exception as e:
+        return f"Errore durante la creazione del file: {str(e)}"
 
 
 def list_files(directory: str = ".") -> str:

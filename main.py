@@ -1,22 +1,24 @@
+import pysqlite3
+import sys
+sys.modules["sqlite3"] = pysqlite3 # Sostituisce la libreria di sistema con quella nuova
+
 import uuid
 from my_agent.app import app
 
 
 def run_interactive_agent():
-    # Creiamo un ID sessione unico (o usane uno fisso per testare la memoria)
-    # Se vuoi che ricordi tutto tra un riavvio e l'altro, usa: thread_id = "sessione_1"
+
     thread_id = "sviluppatore_32core"
-    config = {"configurable": {"thread_id": thread_id}}
+    config = {"configurable": {"thread_id": "sessione_1"}}
 
     print(f"\033[94m--- AGENTE CON MEMORIA ATTIVA (ID: {thread_id}) ---\033[0m")
 
-    current_state = None  # Non serve più passarlo a mano, lo legge dal DB!
+    current_state = None
 
     while True:
         user_input = input("\033[92mTu:\033[0m ").strip()
         if user_input.lower() in ['exit', 'quit']: break
 
-        # Passiamo l'input e la CONFIGURAZIONE al grafo
         input_data = {"messages": [("user", user_input)]}
 
         try:
