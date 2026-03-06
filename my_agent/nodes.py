@@ -1,32 +1,47 @@
+import os
 from langgraph.prebuilt import ToolNode
 from my_agent.tools import all_tools
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 from my_agent.utils.logger import setup_logger, get_resource_log
 
-print("\033[94m[DEBUG] nodes.py: Caricamento tool e Qwen 2.5\033[0m")
+from my_agent.utils.workspace import secure_path, WORKSPACE_DIR
+PROJECT_ROOT = WORKSPACE_DIR.parent
+
+
+log = setup_logger("AGENT")
 
 model = ChatOllama(model="qwen2.5:7b", temperature=0).bind_tools(all_tools)
 summarizer_llm = ChatOllama(model="qwen2.5:7b", temperature=0)
+
 call_tools = ToolNode(all_tools)
-log = setup_logger("AGENT")
 
+SYSTEM_PROMPT = """Sei un Architetto Software Senior e un esperto di automazione file-system.
+Operi esclusivamente all'interno della cartella '/workspace'. 
 
-SYSTEM_PROMPT = """Sei un Architetto Software Senior. 
-Hai accesso a file system protetto nella cartella /workspace.
-NON rispondere che non puoi eseguire operazioni: i tool che hai a disposizione sono fatti apposta per essere usati.
-Quando l'utente ti chiede di creare file o strutture, usa i tool forniti (create_new_file, etc.) invece di descriverli a parole."""
+REGOLAMENTO OPERATIVO (RIGOROSO):
+1. MODALITÀ EXEC: Non fornire mai feedback testuale intermedi (es. "Sto creando il file...", "Ho finito il passaggio 1..."). Ogni tuo output testuale deve essere o una chiamata a un tool, o la risposta finale conclusiva.
+2. ATOMICITÀ: Se ti viene assegnato un task complesso, scomponilo internamente e rispondi concatenando le chiamate ai tool. Esegui le azioni in silenzio.
+3. OUTPUT: Se un tool restituisce un output, non ripetere il contenuto dell'output nell'AI Message. Analizzalo e passa allo step successivo.
+4. PERSONALITÀ: Sei sintetico, tecnico, preciso. Non sei un assistente chiacchierone, sei un'interfaccia di esecuzione.
+5. SICUREZZA: Ogni operazione di scrittura/lettura deve essere validata tramite la funzione `secure_path`. Non tentare MAI di accedere a percorsi esterni alla /workspace.
+
+Se ti chiedo un task, il risultato deve essere il completamento dell'azione, non un saggio sulla stessa.
+"""
 
 
 def call_model(state):
-    # Assicurati che il SystemMessage sia sempre il primo messaggio
-    messages = state["messages"]
-    if not isinstance(messages[0], SystemMessage):
-        messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+    log.info(f"Avvio inferenza LLM. Contesto: {len(state['messages'])} messaggi")
 
-    log.info(f"Avvio inferenza LLM. Contesto: {len(messages)} messaggi{get_resource_log()}")
-    response = model.invoke(messages)
-    log.debug("Risposta generata correttamente.")
+    # Invia lo stato attuale (che dovrebbe già contenere il SystemMessage all'indice 0)
+    response = model.invoke(state["messages"])
+
+    # Log del risultato per debug immediato
+    if response.tool_calls:
+        log.info(f"✅ Tool chiamati: {response.tool_calls}")
+    else:
+        log.info("ℹ️ Risposta testuale (nessun tool chiamato).")
+
     return {"messages": [response]}
 
 
@@ -40,7 +55,7 @@ def should_continue(state):
 
 
 def should_summarize(state):
-    if len(state["messages"]) > 15:
+    if len(state["messages"]) > 5:
         log.info(f"\n[MEMORY] Soglia superata ({len(state['messages'])} messaggi). Innesco riassunto...")
         return "summarize"
     return "agent"

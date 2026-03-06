@@ -35,6 +35,9 @@ def router(state):
 
 
 def create_app():
+    def initialize_state(messages):
+        return {"messages": [SystemMessage(content=SYSTEM_PROMPT)] + messages}
+
     workflow = StateGraph(AgentState)
 
     # Nodi
