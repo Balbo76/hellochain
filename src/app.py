@@ -23,7 +23,7 @@ def router(state):
     last_message = messages[-1]
 
     # 1. Priorità: Memoria (se > 15 messaggi)
-    if len(messages) > 5:
+    if len(messages) > 9:
         return "summarize"
 
     # 2. Priorità: Azioni (se ci sono chiamate a tool)

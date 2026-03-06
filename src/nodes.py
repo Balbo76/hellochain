@@ -45,22 +45,6 @@ def call_model(state):
     return {"messages": [response]}
 
 
-def should_continue(state):
-    messages = state["messages"]
-    last_message = messages[-1]
-    if not last_message.tool_calls:
-        return "end"
-    log.info(f"\n[ACTION] L'agente ha deciso di usare un tool: {last_message.tool_calls[0]['name']}!")
-    return "continue"
-
-
-def should_summarize(state):
-    if len(state["messages"]) > 5:
-        log.info(f"\n[MEMORY] Soglia superata ({len(state['messages'])} messaggi). Innesco riassunto...")
-        return "summarize"
-    return "agent"
-
-
 def summarize_history(state):
     messages = state["messages"]
 

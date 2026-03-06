@@ -10,7 +10,7 @@ from langchain_core.messages import SystemMessage
 
 
 def run_interactive_agent():
-    thread_id = "sessione_1"
+    thread_id = "sessione_2"
     config = {"configurable": {"thread_id": thread_id}}
 
     print(f"\033[94m--- AGENTE CON MEMORIA ATTIVA (ID: {thread_id}) ---\033[0m")

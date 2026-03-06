@@ -1,8 +1,9 @@
 import os
+import shutil
 from pathlib import Path
 from langchain_core.tools import tool
-
 from src.utils.workspace import secure_path, WORKSPACE_DIR
+
 PROJECT_ROOT = WORKSPACE_DIR.parent
 
 
@@ -49,3 +50,26 @@ def read_file(filename: str) -> str:
         return f"Errore di sicurezza: {str(e)}"
     except Exception as e:
         return f"Errore durante la lettura: {str(e)}"
+
+
+@tool
+def get_workspace_stats() -> str:
+    """Restituisce un sommario dei file presenti, inclusi pesi e date di modifica."""
+    stats = []
+    for path in WORKSPACE_DIR.rglob("*"):
+        if path.is_file():
+            stats.append(f"{path.name} ({path.stat().st_size} bytes)")
+    return "\n".join(stats) if stats else "Workspace vuoto."
+
+
+@tool
+def delete_file(filename: str) -> str:
+    """Elimina un file in modo sicuro, spostandolo nel cestino interno."""
+    target = secure_path(filename)
+    trash_dir = WORKSPACE_DIR / ".trash"
+    trash_dir.mkdir(exist_ok=True)
+
+    if target.exists():
+        shutil.move(str(target), str(trash_dir / target.name))
+        return f"File {target.name} eliminato (spostato nel trash)."
+    return "Errore: file non trovato."
