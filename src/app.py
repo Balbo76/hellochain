@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph, END
-from my_agent.state import AgentState
-from my_agent.nodes import call_model, call_tools, summarize_history
+from src.state import AgentState
+from src.nodes import call_model, call_tools, summarize_history
 
 # Setup directory
 base_dir = Path(__file__).parent.parent
@@ -23,7 +23,7 @@ def router(state):
     last_message = messages[-1]
 
     # 1. Priorità: Memoria (se > 15 messaggi)
-    if len(messages) > 15:
+    if len(messages) > 5:
         return "summarize"
 
     # 2. Priorità: Azioni (se ci sono chiamate a tool)

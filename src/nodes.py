@@ -1,11 +1,11 @@
 import os
 from langgraph.prebuilt import ToolNode
-from my_agent.tools import all_tools
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
-from my_agent.utils.logger import setup_logger, get_resource_log
+from src.tools import all_tools
+from src.utils.logger import setup_logger, get_resource_log
+from src.utils.workspace import secure_path, WORKSPACE_DIR
 
-from my_agent.utils.workspace import secure_path, WORKSPACE_DIR
 PROJECT_ROOT = WORKSPACE_DIR.parent
 
 

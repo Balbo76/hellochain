@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
-
-from my_agent.utils.workspace import secure_path, WORKSPACE_DIR
 from langchain_core.tools import tool
 
+from src.utils.workspace import secure_path, WORKSPACE_DIR
 PROJECT_ROOT = WORKSPACE_DIR.parent
 
 

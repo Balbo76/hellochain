@@ -4,8 +4,8 @@ import pysqlite3
 sys.modules["sqlite3"] = pysqlite3
 
 import uuid
-from my_agent.app import app
-from my_agent.nodes import SYSTEM_PROMPT
+from src.app import app
+from src.nodes import SYSTEM_PROMPT
 from langchain_core.messages import SystemMessage
 
 
