@@ -5,14 +5,17 @@ from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage
 from src.tools import all_tools
 from src.utils.logger import setup_logger, get_resource_log
 from src.utils.workspace import secure_path, WORKSPACE_DIR
+from config_llm import get_llm
+
+from src.utils import get_model, LLMWrapper
 
 PROJECT_ROOT = WORKSPACE_DIR.parent
-
-
 log = setup_logger("AGENT")
+raw_model = get_model()
+model = LLMWrapper(raw_model)
+llm = LLMWrapper(model)
 
-model = ChatOllama(model="qwen2.5:7b", temperature=0).bind_tools(all_tools)
-summarizer_llm = ChatOllama(model="qwen2.5:7b", temperature=0)
+summarizer_llm = llm
 
 call_tools = ToolNode(all_tools)
 
